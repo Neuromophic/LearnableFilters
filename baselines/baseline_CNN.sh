@@ -1,0 +1,10 @@
+sbatch baseline_CNN.py 0
+sbatch baseline_CNN.py 1
+sbatch baseline_CNN.py 2
+sbatch baseline_CNN.py 3
+sbatch baseline_CNN.py 4
+sbatch baseline_CNN.py 5
+sbatch baseline_CNN.py 6
+sbatch baseline_CNN.py 7
+sbatch baseline_CNN.py 8
+sbatch baseline_CNN.py 9
