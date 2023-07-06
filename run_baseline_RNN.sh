@@ -1,0 +1,10 @@
+sbatch exp_baseline_RNN.py --SEED 0 --task temporal --loss celoss --metric acc --projectname Baseline
+sbatch exp_baseline_RNN.py --SEED 1 --task temporal --loss celoss --metric acc --projectname Baseline
+sbatch exp_baseline_RNN.py --SEED 2 --task temporal --loss celoss --metric acc --projectname Baseline
+sbatch exp_baseline_RNN.py --SEED 3 --task temporal --loss celoss --metric acc --projectname Baseline
+sbatch exp_baseline_RNN.py --SEED 4 --task temporal --loss celoss --metric acc --projectname Baseline
+sbatch exp_baseline_RNN.py --SEED 5 --task temporal --loss celoss --metric acc --projectname Baseline
+sbatch exp_baseline_RNN.py --SEED 6 --task temporal --loss celoss --metric acc --projectname Baseline
+sbatch exp_baseline_RNN.py --SEED 7 --task temporal --loss celoss --metric acc --projectname Baseline
+sbatch exp_baseline_RNN.py --SEED 8 --task temporal --loss celoss --metric acc --projectname Baseline
+sbatch exp_baseline_RNN.py --SEED 9 --task temporal --loss celoss --metric acc --projectname Baseline

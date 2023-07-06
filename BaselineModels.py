@@ -191,6 +191,7 @@ class TanhRT(torch.nn.Module):
 # ================================================================================================================================================
 # ===============================================================  Printed Layer  ================================================================
 # ================================================================================================================================================
+
 class pLayer(torch.nn.Module):
     def __init__(self, n_in, n_out, args, ACT, INV):
         super().__init__()
@@ -238,85 +239,19 @@ class pLayer(torch.nn.Module):
 
     def forward(self, a_previous):
         z_new = self.MAC(a_previous)
-        self.mac_power = self.MACPower(a_previous, z_new)
         a_new = self.ACT(z_new)
-        self.act_power = self.ACT.power * a_new.shape[1]
         return a_new
 
-    @property
-    def g_tilde(self):
-        # scaled conductances
-        g_initial = self.theta_.abs()
-        g_min = g_initial.min(dim=0, keepdim=True)[0]
-        scaler = self.args.pgmin / g_min
-        return g_initial * scaler
-
-    def MACPower(self, x, y):
-        x_extend = torch.cat([x,
-                              torch.ones([x.shape[0], 1]).to(self.device),
-                              torch.zeros([x.shape[0], 1]).to(self.device)], dim=1)
-        x_neg = self.INV(x_extend)
-        x_neg[:, -1] = 0.
-
-        E = x_extend.shape[0]
-        M = x_extend.shape[1]
-        N = y.shape[1]
-
-        positive = self.theta.clone().detach().to(self.device)
-        positive[positive >= 0] = 1.
-        positive[positive < 0] = 0.
-        negative = 1. - positive
-
-        Power = torch.tensor(0.).to(self.device)
-
-        for m in range(M):
-            for n in range(N):
-                Power += self.g_tilde[m, n] * (
-                    (x_extend[:, m]*positive[m, n]+x_neg[:, m]*negative[m, n])-y[:, n]).pow(2.).sum()
-        Power = Power / E
-        return Power
-    
-    @property
-    def neg_power(self):
-        # forward pass: power of neg * number of negative weights
-        positive = self.theta.clone().detach()[:-1,:]
-        positive[positive >= 0] = 1.
-        positive[positive <  0] = 0.
-        negative = 1. - positive
-        N_neg = negative.sum(1)
-        N_neg[N_neg>0] = 1.
-        N_neg = N_neg.sum()
-        power = self.INV.power * N_neg
-        # backward pass: power of neg * value of negative weights
-        soft_count = 1 - torch.sigmoid(self.theta[:-1,:])
-        soft_count = soft_count * negative
-        soft_count = soft_count.max(0)[0].sum()
-        # soft_N_neg = torch.nn.functional.relu(-self.theta_).sum()
-        power_relaxed = self.INV.power * soft_count
-        return power.detach() + power_relaxed - power_relaxed.detach()
-
-    @property
-    def power(self):
-        return self.mac_power + self.act_power + self.neg_power
-
-    def WeightAttraction(self):
-        mean = self.theta.mean(dim=0)
-        diff = self.theta - mean
-        return diff.pow(2.).mean()
-
-    def WeightDecay(self):
-        return self.theta.pow(2.).mean()
-
-    def SetParameter(self, name, value):
-        if name == 'args':
-            self.args = value
-            self.INV.args = value
-            self.ACT.args = value
+    def UpdateArgs(self, args):
+        self.args = args
+        self.INV.args = args
+        self.ACT.args = args
 
 
 # ================================================================================================================================================
 # ==============================================================  Printed Circuit  ===============================================================
 # ================================================================================================================================================
+
 class pNN(torch.nn.Module):
     def __init__(self, topology, args):
         super().__init__()
@@ -339,19 +274,6 @@ class pNN(torch.nn.Module):
     def device(self):
         return self.args.DEVICE
 
-    def Power(self):
-        power = torch.tensor([0.]).to(self.device)
-        for l in self.model:
-            power += l.power
-        return power
-
-    def WeightModifier(self):
-        penalty = torch.tensor(0.)
-        for l in self.model:
-            penalty += l.WeightAttraction() / 2
-            penalty += l.WeightDecay() / 2
-        return penalty / len(self.model)
-
     def GetParam(self):
         weights = [p for name, p in self.named_parameters() if name.endswith('.theta_')]
         nonlinear = [p for name, p in self.named_parameters() if name.endswith('.rt_')]
@@ -360,235 +282,54 @@ class pNN(torch.nn.Module):
         else:
             return weights
 
-    def SetParameter(self, name, value):
-        if name == 'args':
-            self.args = value
-            for m in self.model:
-                m.SetParameter('args', self.args)
-
-
-# ================================================================================================================================================
-# =============================================================  pNN Loss function  ==============================================================
-# ================================================================================================================================================
-
-class pNNLoss(torch.nn.Module):
-    def __init__(self, args):
-        super().__init__()
-        self.args = args
-
-    def standard(self, prediction, label):
-        label = label.reshape(-1, 1)
-        fy = prediction.gather(1, label).reshape(-1, 1)
-        fny = prediction.clone()
-        fny = fny.scatter_(1, label, -10 ** 10)
-        fnym = torch.max(fny, axis=1).values.reshape(-1, 1)
-        l = torch.max(self.args.m + self.args.T - fy, torch.tensor(0)
-                      ) + torch.max(self.args.m + fnym, torch.tensor(0))
-        L = torch.mean(l)
-        return L
-
-    def PowerEstimator(self, nn, x):
-        _ = nn(x)
-        return nn.Power()
-
-    def WeightModifier(self, nn):
-        return nn.WeightModifier()
-
-    def forward(self, nn, x, label):
-        if self.args.powerestimator == 'attraction':
-            return (1. - self.args.powerbalance) * self.standard(nn(x), label) + self.args.powerbalance * self.WeightModifier(nn)
-        elif self.args.powerestimator == 'power':
-            return (1. - self.args.powerbalance) * self.standard(nn(x), label) + self.args.powerbalance * self.PowerEstimator(nn, x)
-        elif self.args.powerestimator == 'both':
-            return (1. - self.args.powerbalance) * self.standard(nn(x), label) + self.args.powerbalance * (self.args.estimatorbalance * self.PowerEstimator(nn, x) + (1-self.args.estimatorbalance) * self.WeightModifier(nn)) / 2
-        elif self.args.powerestimator == 'none':
-            return self.standard(nn(x), label)
-        
-# ================================================================================================================================================
-# ============================================================= learnable tanh function ==========================================================
-# ================================================================================================================================================
-
-class Tanh(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        eta = torch.tensor([0., 1., 0., 1.])
-        self.eta = torch.nn.Parameter(eta, requires_grad=True)       
-    
-    def forward(self, x):
-        return self.eta[0] + self.eta[1] * torch.tanh((x - self.eta[2]) * self.eta[3])
-    
-class Sigmoid(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        eta = torch.tensor([0., 1., 0., 1.])
-        self.eta = torch.nn.Parameter(eta, requires_grad=True)       
-    
-    def forward(self, x):
-        return self.eta[0] + self.eta[1] * torch.sigmoid((x - self.eta[2]) * self.eta[3])
-
-# ================================================================================================================================================
-# ============================================================== Cross Entropy Loss Function =====================================================
-# ================================================================================================================================================
-
-class CELOSS(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.lossfn = torch.nn.CrossEntropyLoss()
-
-    def forward(self, nn, x, label):
-        return self.lossfn(nn(x), label)
-    
-# ================================================================================================================================================
-# ============================================================== Long Short Term Memory ==========================================================
-# ================================================================================================================================================
-
-class LSTMCell(torch.nn.Module):
-    def __init__(self, input_size, hidden_size, sigmoid, activation):
-        super(LSTMCell, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-
-        self.i2h = torch.nn.Linear(input_size + hidden_size, 4 * hidden_size)
-        self.h2h = torch.nn.Linear(hidden_size, 4 * hidden_size)
-        
-        self.sigmoid = sigmoid
-        self.activation = activation
-
-    def forward(self, input, hidden):
-        hx, cx = hidden
-        gates = self.i2h(torch.cat([input, hx], dim=1)) + self.h2h(hx)
-        i_gate, f_gate, c_gate, o_gate = gates.chunk(4, 1)
-
-        i_gate = self.sigmoid(i_gate)
-        f_gate = self.sigmoid(f_gate)
-        c_gate = self.activation(c_gate)
-        o_gate = self.sigmoid(o_gate)
-
-        cy = (f_gate * cx) + (i_gate * c_gate)
-        hy = o_gate * self.activation(cy)
-
-        return hy, cy
-
-class CustomLSTM(torch.nn.Module):
-    def __init__(self, input_size, hidden_size):
-        super().__init__()
-        self.activation = Tanh()
-        self.sigmoid = Sigmoid()
-        self.lstm_cell = LSTMCell(input_size, hidden_size, self.sigmoid, self.activation)
-    
-    def forward(self, input_sequence, initial_states=None):
-        input_sequence = input_sequence.permute(1,0,2)
-        batch_size = input_sequence.size(1)
-        hidden_size = self.lstm_cell.hidden_size
-
-        if initial_states is None:
-            hx = torch.zeros(batch_size, hidden_size, device=input_sequence.device)
-            cx = torch.zeros(batch_size, hidden_size, device=input_sequence.device)
-        else:
-            hx, cx = initial_states
-
-        output_sequence = []
-        for i in range(input_sequence.size(0)):  # iterate over the sequence length
-            hx, cx = self.lstm_cell(input_sequence[i], (hx, cx))
-            output_sequence.append(hx)
-
-        output_sequence = torch.stack(output_sequence).permute(1,0,2)
-        return output_sequence, (hx, cx)
-
-    
-class lstm(torch.nn.Module):
-    def __init__(self, args, N_channel, N_class):
-        super().__init__()
-        self.args = args
-        self.rnn = CustomLSTM(N_channel, N_class)
-        self.softmax = torch.nn.Softmax(dim=1)
-
-    def Power(self):
-        # this function is just used to match the evaluation
-        # the power of lstm in-silico is acutally not considered
-        return torch.zeros(1)
-    
-    def forward(self, X):
-        X = X.permute(0,2,1)
-        output, (h,c) = self.rnn(X)
-        result = self.softmax(output[:,-1,:])
-        return result
-    
-    def GetParam(self):
-        weights = [p for name, p in self.named_parameters() if name.endswith('.weight') or name.endswith('bias')]
-        nonlinear = [p for name, p in self.named_parameters() if name.endswith('.eta')]
-        if self.args.lnc:
-            return weights + nonlinear
-        else:
-            return weights
-        
     def UpdateArgs(self, args):
         self.args = args
-        for layer in self.model:
-            if hasattr(layer, 'UpdateArgs'):
-                layer.UpdateArgs(args)
+        for m in self.model:
+            m.UpdateArgs(self.args)
 
-
+    
 # ================================================================================================================================================
-# ============================================================== Multi-Layer Perception ==========================================================
+# ============================================================= Recurrent Neural Network =========================================================
 # ================================================================================================================================================
 
-class mlp(torch.nn.Module):
-    def __init__(self, args, topology):
+class RNN(torch.nn.Module):
+    def __init__(self, n_feature, n_class):
         super().__init__()
-        self.args = args
-        
-        self.activation = Tanh()
-        
-        self.model = torch.nn.Sequential()
-        for i in range(len(topology)-1):
-            self.model.add_module(f'{i}-th pLayer', torch.nn.Linear(topology[i], topology[i+1]))
-            self.model.add_module(f'{i}-th activation', self.activation)
-    
-    def Power(self):
-        # this function is just used to match the evaluation
-        # the power of mlp in-silico is acutally not considered
-        return torch.zeros(1)
-    
-    def forward(self, X):
-        return self.model(X)
+        self.model = torch.nn.RNN(n_feature, n_class, 2, batch_first=True)
+
+    def forward(self, x):
+        x = x.permute(0, 2, 1)
+        output, _ = self.model(x)
+        output = output.permute(0, 2, 1)
+        output = output[:, :, -1]
+        return output
     
     def GetParam(self):
-        weights = [p for name, p in self.named_parameters() if name.endswith('.weight') or name.endswith('bias')]
-        nonlinear = [p for name, p in self.named_parameters() if name.endswith('.eta')]
-        if self.args.lnc:
-            return weights + nonlinear
-        else:
-            return weights
-        
-    def UpdateArgs(self, args):
-        self.args = args
-        for layer in self.model:
-            if hasattr(layer, 'UpdateArgs'):
-                layer.UpdateArgs(args)
+        return self.model.parameters()
     
+
 #===============================================================================
 #============================ Single Spiking Neuron ============================
 #===============================================================================
     
 class SpikingNeuron(torch.nn.Module):
-    def __init__(self, args, beta=None, threshold=None, random_state=True):
+    def __init__(self, args, random_state=True):
         super().__init__()
         self.args = args
-        self.beta = beta
-        self.threshold = threshold
+        self.beta = torch.nn.Parameter(torch.randn([]), requires_grad=True)
+        self.threshold = torch.nn.Parameter(torch.randn([]), requires_grad=True)
 
         # whether to initialize the initial state randomly for simulating unknown previous state
         # this is especially useful for signals split by sliding windows
         self.random_state = random_state
-    
+
     @property
     def feasible_beta(self):
-        return torch.sigmoid(self.threshold)
+        return torch.sigmoid(self.beta)
     
     @property
     def feasible_threshold(self):
-        return torch.nn.functional.softplus(self.beta)
+        return torch.nn.functional.softplus(self.threshold)
     
     @property
     def DEVICE(self):
@@ -599,12 +340,12 @@ class SpikingNeuron(torch.nn.Module):
         # forward is 0/1 spike
         forward = (surplus >= 0).float()
         # backward is sigmoid relaxation
-        backward = torch.sigmoid(surplus * 10.)
+        backward = torch.sigmoid(surplus * 5.)
         return forward.detach() + backward - backward.detach()
     
     def StateUpdate(self, x):
         # update the state of neuron with new input
-        return self.feasible_beta * self.memory + x
+        return self.feasible_beta * self.memory + (1. - self.feasible_beta) * x
     
     @property
     def fire(self):
@@ -647,14 +388,14 @@ class SpikingNeuron(torch.nn.Module):
 #===============================================================================
 
 class SpikingLayer(torch.nn.Module):
-    def __init__(self, args, N_neuron, beta=None, threshold=None, random_state=True, spike_only=True):
+    def __init__(self, args, N_neuron, random_state=True, spike_only=True):
         super().__init__()
         self.args = args
         
         # create a list of neurons, number of neurons is the number of channels
         self.SNNList = torch.nn.ModuleList()
         for n in range(N_neuron):
-            self.SNNList.append(SpikingNeuron(args, beta, threshold, random_state))
+            self.SNNList.append(SpikingNeuron(args, random_state))
         # whether to output only spikes, False is geneally for visualization
         self.spike_only = spike_only
         
@@ -720,22 +461,11 @@ class SpikingNeuralNetwork(torch.nn.Module):
         super().__init__()
         self.args = args
         
-        # initialize beta
-        if beta is None:
-            beta = torch.tensor(0.95)
-        beta = torch.log(beta / (1 - beta))
-        self.beta = torch.nn.Parameter(beta, requires_grad=True)
-        
-        # initialize threshold
-        if threshold is None:
-            threshold = torch.tensor(1.)
-        self.threshold = torch.nn.Parameter(threshold, requires_grad=True)
-        
         # create snn with weighted-sum and spiking neurons
         self.model = torch.nn.Sequential()
         for i in range(len(topology)-1):
             self.model.add_module('MAC'+str(i), TemporalWeightedSum(args, topology[i], topology[i+1]))
-            self.model.add_module('SNNLayer'+str(i), SpikingLayer(args, topology[i+1], self.beta, self.threshold, random_state))
+            self.model.add_module('SNNLayer'+str(i), SpikingLayer(args, topology[i+1], random_state))
         self.InitOutput()
     
     @property
@@ -777,10 +507,12 @@ class SpikingNeuralNetwork(torch.nn.Module):
     def GetParam(self):
         weights = [p for name, p in self.named_parameters() if name.endswith('weight')]
         nonlinear = [p for name, p in self.named_parameters() if name.endswith('beta') or name.endswith('threshold')]
-        if self.args.lnc:
-            return weights + nonlinear
-        else:
-            return weights
+        # if self.args.lnc:
+        #     return weights + nonlinear
+        # else:
+        #     return weights
+        return weights + nonlinear
+    
 
 #===============================================================================
 #============================= Loss Functin ====================================
@@ -793,10 +525,49 @@ class SNNLoss(torch.nn.Module):
         self.loss_fn = torch.nn.CrossEntropyLoss()
         
     def forward(self, model, input, label):
-        spk, mem = model(input)
+        _, mem = model(input)
         L = []       
         for step in range(mem.shape[2]):
             L.append(self.loss_fn(mem[:,:,step], label))
         return torch.stack(L).mean()
         
     
+class LossFN(torch.nn.Module):
+    def __init__(self, args):
+        super().__init__()
+        self.args = args
+
+    def standard(self, prediction, label):
+        label = label.reshape(-1, 1)
+        fy = prediction.gather(1, label).reshape(-1, 1)
+        fny = prediction.clone()
+        fny = fny.scatter_(1, label, -10 ** 10)
+        fnym = torch.max(fny, axis=1).values.reshape(-1, 1)
+        l = torch.max(self.args.m + self.args.T - fy, torch.tensor(0)
+                      ) + torch.max(self.args.m + fnym, torch.tensor(0))
+        L = torch.mean(l)
+        return L
+    
+    def celoss(self, prediction, label):
+        fn = torch.nn.CrossEntropyLoss()
+        return fn(prediction, label)
+
+    def temporal(self, prediction, label):
+        L = []
+        T = prediction.shape[2]
+        for t in range(T):
+            L.append(self.celoss(prediction[:,:,t], label))
+        return torch.stack(L).mean()
+        
+
+    def forward(self, nn, x, label):
+        if self.args.loss == 'pnnloss':
+            return self.standard(nn(x), label)
+        elif self.args.loss == 'celoss':
+            return self.celoss(nn(x), label)
+        elif self.args.loss == 'temporal':
+            L = []
+            T = x.shape[2]
+            for t in range(T):
+                L.append(self.celoss(nn(x[:,:,t]), label))
+            return torch.stack(L).mean()

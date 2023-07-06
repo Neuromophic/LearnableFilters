@@ -9,3 +9,5 @@ result_data*
 .vscode
 *.mlp
 *.model
+*.ckp
+*.log
