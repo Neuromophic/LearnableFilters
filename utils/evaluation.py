@@ -20,13 +20,19 @@ class Evaluator(torch.nn.Module):
         corrects = (act[:,0] >= self.sensing_margin) & (act[:,1]<=0) & (label.view(-1)==idx[:,0])
         return corrects.float().sum().item() / label.numel()
     
-    def norminal_temporal(self, nn, x, label):
+    def nominal_snn(self, nn, x, label):
         spk, mem = nn(x)
         act, idx = spk.sum(2).max(dim=1)
         corrects = (label.view(-1) == idx)
         return corrects.float().sum().item() / label.numel()
     
-    def norminal_temporized(self, nn, x, label):
+    def nominal_temporal(self, nn, x, label):
+        output = nn(x)
+        act, idx = output.sum(2).max(dim=1)
+        corrects = (label.view(-1) == idx)
+        return corrects.float().sum().item() / label.numel()
+    
+    def nominal_temporized(self, nn, x, label):
         Corrects = []
         T = x.shape[2]
         for t in range(T):
@@ -41,9 +47,11 @@ class Evaluator(torch.nn.Module):
         elif self.args.metric == 'maa':
             self.performance = self.maa
         elif self.args.metric == 'temporal_acc':
-            self.performance = self.norminal_temporal
+            self.performance = self.nominal_temporal
         elif self.args.metric == 'temporized_acc':
-            self.performance = self.norminal_temporized
+            self.performance = self.nominal_temporized
+        elif self.args.metric == 'nominal_snn':
+            self.performance = self.nominal_snn
         return self.performance(nn, x, label)
     
   

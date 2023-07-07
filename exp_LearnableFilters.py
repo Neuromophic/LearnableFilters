@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#SBATCH --job-name=BSL
+#SBATCH --job-name=LPF
 #SBATCH --error=%x.%j.err
 #SBATCH --output=%x.%j.out
 #SBATCH --mail-user=hzhao@teco.edu
@@ -35,7 +35,7 @@ for ds in range(88):
 
     SetSeed(args.SEED)
 
-    setup = f"pLF_data_{datainfo['dataname']}_seed_{args.SEED:02d}.model"
+    setup = f"pLF_data_{args.DATASET:02d}_{datainfo['dataname']}_seed_{args.SEED:02d}.model"
     print(f'Training setup: {setup}.')
 
     msglogger = GetMessageLogger(args, setup)
