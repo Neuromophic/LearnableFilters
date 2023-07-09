@@ -20,7 +20,7 @@ import PrintedLearnableFilter as pNN
 
 args = parser.parse_args()
 
-for ds in range(88):
+for ds in range(84):
 
     args.DATASET = ds
     args = FormulateArgs(args)
