@@ -62,14 +62,14 @@ class LearnableFilter(torch.nn.Module):
 #===============================================================================
 
 class FilterGroup(torch.nn.Module):
-    def __init__(self, args, random_state=True):
+    def __init__(self, args, N_filters, random_state=True):
         super().__init__()
         self.args = args
         
         # create a list of filters, each filter has different betas to process the SAME input        
         self.FilterGroup = torch.nn.ModuleList()
-        for n in range(args.N_filters):
-            init_beta = 0.001 + n / args.N_filters
+        for n in range(N_filters):
+            init_beta = 0.001 + n / N_filters
             init_beta = torch.log(torch.tensor(init_beta / (1 - init_beta))).to(self.DEVICE)
             self.FilterGroup.append(LearnableFilter(args, init_beta, random_state))
         
@@ -101,7 +101,7 @@ class FilterLayer(torch.nn.Module):
         # create a list of filter groups, each group processes each channel        
         self.FilterGroups = torch.nn.ModuleList()
         for n in range(N_channel):
-            self.FilterGroups.append(FilterGroup(args, random_state))
+            self.FilterGroups.append(FilterGroup(args, N_channel, random_state))
         
     @property
     def DEVICE(self):
@@ -377,12 +377,42 @@ class pLayer(torch.nn.Module):
         self.INV.args = args
         self.ACT.args = args
 
+
+# ================================================================================================================================================
+# ==========================================================  Printed Recurrent Layer ============================================================
+# ================================================================================================================================================
+
+class pRecurrentLayer(torch.nn.Module):
+    def __init__(self, args, N_in, N_out, ACT, INV):
+        super().__init__()
+        self.args = args
+
+        self.model = torch.nn.Sequential()
+        self.model.add_module('0_MAC', pLayer(N_in, N_out, args, ACT, INV))
+        self.model.add_module('1_LF', FilterLayer(args, N_out))
+        self.model.add_module('2_MAC', pLayer(N_out * (N_out + 1), N_out, args, ACT, INV))
+        self.model.add_module('3_ACT', ACT)
+    @property
+    def device(self):
+        return self.args.DEVICE
+    
+    def forward(self, x):
+        return self.model(x)
+    
+    def UpdateArgs(self, args):
+        self.args = args
+        self.model[0].UpdateArgs(args)
+        self.model[1].UpdateArgs(args)
+        self.model[2].UpdateArgs(args)
+
+
+
 #===============================================================================
 #======================== Printed Neural Network ===============================
 #===============================================================================
 
 class PrintedNeuralNetwork(torch.nn.Module):
-    def __init__(self, args, N_channel, topology, random_state=True):
+    def __init__(self, args, N_channel, N_class, N_layer, random_state=True):
         super().__init__()
         self.args = args
         
@@ -391,9 +421,9 @@ class PrintedNeuralNetwork(torch.nn.Module):
 
         # create pNN with learnable filters and weighted-sum
         self.model = torch.nn.Sequential()
-        self.model.add_module('0_FilterLayer', FilterLayer(args, N_channel, random_state=True))
-        for i in range(len(topology)-1):
-            self.model.add_module(f'{i+1}_pLayer', pLayer(topology[i], topology[i+1], args, self.ACT, self.INV))
+        self.model.add_module('0_pLayer', pRecurrentLayer(self.args, N_channel, N_class, self.ACT, self.INV))
+        for i in range(N_layer-1):
+            self.model.add_module(str(i+1)+'_pLayer', pRecurrentLayer(self.args, N_class, N_class, self.ACT, self.INV))
     
     @property
     def DEVICE(self):

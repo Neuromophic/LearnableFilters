@@ -41,7 +41,6 @@ parser.add_argument('--coupling_factor',       type=float,     default=0.1,     
 parser.add_argument('--pathnorm',              type=bool,      default=False,                 help='path-norm as regularization for improving robustness against input noise')
 # network-related
 parser.add_argument('--hidden',                type=list,      default=[5],                   help='topology of the hidden layers')
-parser.add_argument('--N_filters',             type=int,       default=5,                     help='number of filters for each channel')
 # training-related
 parser.add_argument('--SEED',                  type=int,       default=0,                     help='random seed')
 parser.add_argument('--DEVICE',                type=str,       default='gpu',                 help='device for training')

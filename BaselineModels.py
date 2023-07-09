@@ -293,9 +293,9 @@ class pNN(torch.nn.Module):
 # ================================================================================================================================================
 
 class RNN(torch.nn.Module):
-    def __init__(self, n_feature, n_class):
+    def __init__(self, n_feature, n_class, n_layer):
         super().__init__()
-        self.model = torch.nn.RNN(n_feature, n_class, 2, batch_first=True)
+        self.model = torch.nn.RNN(n_feature, n_class, n_layer, batch_first=True)
 
     def forward(self, x):
         x = x.permute(0, 2, 1)

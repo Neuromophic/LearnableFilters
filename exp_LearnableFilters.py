@@ -51,7 +51,7 @@ for ds in range(84):
         topology = [(args.N_filters+1) * N_channel] + args.hidden + [datainfo['N_class']]
         msglogger.info(f'Topology of the network: {topology}.')
 
-        pnn = pNN.PrintedNeuralNetwork(args, N_channel, topology).to(args.DEVICE)
+        pnn = pNN.PrintedNeuralNetwork(args, datainfo['N_feature'], datainfo['N_class'], 2).to(args.DEVICE)
 
         msglogger.info(f'Number of parameters that are learned in this experiment: {len(pnn.GetParam())}.')
 
