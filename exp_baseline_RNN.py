@@ -47,7 +47,7 @@ for ds in range(84):
         print(f'{setup} exists, skip this training.')
         msglogger.info('Training was already finished.')
     else:
-        rnn = B.RNN(datainfo['N_feature'], datainfo['N_class']).to(args.DEVICE)
+        rnn = B.RNN(datainfo['N_feature'], datainfo['N_class'], 2).to(args.DEVICE)
         
         lossfunction = B.LossFN(args).to(args.DEVICE)
         optimizer = torch.optim.Adam(rnn.GetParam(), lr=args.LR)
