@@ -391,7 +391,6 @@ class pRecurrentLayer(torch.nn.Module):
         self.model.add_module('0_MAC', pLayer(N_in, N_out, args, ACT, INV))
         self.model.add_module('1_LF', FilterLayer(args, N_out))
         self.model.add_module('2_MAC', pLayer(N_out * (N_out + 1), N_out, args, ACT, INV))
-        self.model.add_module('3_ACT', ACT)
     @property
     def device(self):
         return self.args.DEVICE
