@@ -108,16 +108,12 @@ def GetDataLoader(args, mode, path=None):
 
     temporized_datasets = normal_datasets
 
-    temporal_datasets = ['Dataset_arrowhead.tsds',
-                         'Dataset_bme.tsds',
-                         'Dataset_cbf.tsds',
-                         'Dataset_chinatown.tsds',
+    temporal_datasets = ['Dataset_cbf.tsds',
                          'Dataset_chlorineconcentration.tsds',
                          'Dataset_cincecgtorso.tsds',
                          'Dataset_computers.tsds',
                          'Dataset_diatomsizereduction.tsds',
                          'Dataset_distalphalanxoutlineagegroup.tsds',
-                         'Dataset_distalphalanxoutlinecorrect.tsds',
                          'Dataset_distalphalanxtw.tsds',
                          'Dataset_earthquakes.tsds',
                          'Dataset_ecg200.tsds',

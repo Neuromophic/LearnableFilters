@@ -20,9 +20,9 @@ import BaselineModels as B
 
 args = parser.parse_args()
 
-for ds in range(84):
+for seed in range(10):
 
-    args.DATASET = ds
+    args.SEED = seed
     args = FormulateArgs(args)
     
     print(f'Training network on device: {args.DEVICE}.')
