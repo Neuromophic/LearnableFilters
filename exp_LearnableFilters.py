@@ -6,7 +6,7 @@
 #SBATCH --export=ALL
 #SBATCH --time=48:00:00
 #SBATCH --partition=sdil
-#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=1
 
 import os
 import sys

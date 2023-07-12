@@ -43,7 +43,7 @@ parser.add_argument('--pathnorm',              type=bool,      default=False,   
 parser.add_argument('--hidden',                type=list,      default=[5],                   help='topology of the hidden layers')
 # training-related
 parser.add_argument('--SEED',                  type=int,       default=0,                     help='random seed')
-parser.add_argument('--DEVICE',                type=str,       default='gpu',                 help='device for training')
+parser.add_argument('--DEVICE',                type=str,       default='cpu',                 help='device for training')
 parser.add_argument('--PATIENCE',              type=int,       default=500,                   help='patience for early-stopping')
 parser.add_argument('--EPOCH',                 type=int,       default=10**10,                help='maximal epochs')
 parser.add_argument('--LR',                    type=float,     default=0.01,                  help='learning rate')
