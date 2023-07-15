@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 for seed in range(10):
 
-    args.DATASET = ds
+    args.SEED = seed
     args = FormulateArgs(args)
         
     print(f'Training network on device: {args.DEVICE}.')
