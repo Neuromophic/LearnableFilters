@@ -46,7 +46,7 @@ parser.add_argument('--SEED',                  type=int,       default=0,       
 parser.add_argument('--DEVICE',                type=str,       default='cpu',                 help='device for training')
 parser.add_argument('--PATIENCE',              type=int,       default=500,                   help='patience for early-stopping')
 parser.add_argument('--EPOCH',                 type=int,       default=10**10,                help='maximal epochs')
-parser.add_argument('--LR',                    type=float,     default=0.01,                  help='learning rate')
+parser.add_argument('--LR',                    type=float,     default=0.1,                   help='learning rate')
 parser.add_argument('--PROGRESSIVE',           type=bool,      default=True,                  help='whether the learning rate will be adjusted')
 parser.add_argument('--LR_PATIENCE',           type=int,       default=100,                   help='patience for updating learning rate')
 parser.add_argument('--LR_DECAY',              type=float,     default=0.5,                   help='decay of learning rate for progressive lr')

@@ -20,9 +20,9 @@ import PrintedLearnableFilter as pNN
 
 args = parser.parse_args()
 
-for seed in range(10):
+for ds in range(80):
 
-    args.SEED = seed
+    args.DATASET = ds
     args = FormulateArgs(args)
         
     print(f'Training network on device: {args.DEVICE}.')
