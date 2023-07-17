@@ -1,24 +1,20 @@
-sbatch exp_LearnableFilters.py --DATASET 16 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 17 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 18 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 19 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 20 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 21 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 22 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 23 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 24 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 25 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 26 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 27 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 28 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 29 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 30 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 31 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 32 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 33 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 34 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 35 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 36 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 37 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 38 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
-sbatch exp_LearnableFilters.py --DATASET 39 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 16 --SEED 0 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 16 --SEED 1 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 16 --SEED 2 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 16 --SEED 3 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 16 --SEED 4 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 16 --SEED 5 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 16 --SEED 6 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 16 --SEED 7 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 16 --SEED 8 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 16 --SEED 9 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 17 --SEED 0 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 17 --SEED 1 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 17 --SEED 2 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 17 --SEED 3 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 17 --SEED 4 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 17 --SEED 5 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 17 --SEED 6 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 17 --SEED 7 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 17 --SEED 8 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
+sbatch exp_LearnableFilters.py --DATASET 17 --SEED 9 --task temporal --loss celoss --metric temporal_acc --projectname LearnableFilters
