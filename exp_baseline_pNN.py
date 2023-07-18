@@ -71,3 +71,5 @@ for seed in range(10):
             msglogger.info('Training if finished.')
         else:
             msglogger.warning('Time out, further training is necessary.')
+
+    CloseLogger(msglogger)

@@ -71,3 +71,5 @@ for ds in range(80):
             msglogger.info('Training if finished.')
         else:
             msglogger.warning('Time out, further training is necessary.')
+
+    CloseLogger(msglogger)
