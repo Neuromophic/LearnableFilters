@@ -117,6 +117,8 @@ class FilterLayer(torch.nn.Module):
         
     def UpdateArgs(self, args):
         self.args = args
+        for g in self.FilterGroups:
+            g.UpdateArgs(args)
 
 
 # ================================================================================================================================================

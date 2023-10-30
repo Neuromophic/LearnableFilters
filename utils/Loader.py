@@ -119,7 +119,7 @@ def GetDataLoader(args, mode, path=None):
                          'Dataset_mixedshapesregulartrain.tsds',
                          'Dataset_powercons.tsds',
                          'Dataset_proximalphalanxoutlinecorrect.tsds',
-                         'Dataset_selfregulationscp1.tsds',
+                         'Dataset_selfregulationscp2.tsds',
                          'Dataset_slope.tsds',
                          'Dataset_smoothsubspace.tsds',
                          'Dataset_symbols.tsds']
